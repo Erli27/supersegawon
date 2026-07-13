@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Segawon Adventure</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Super Segawon Adventure (Mobile Ready)</title>
     <style>
         body {
             margin: 0;
@@ -17,23 +17,66 @@
             color: white;
             flex-direction: column;
             overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
         }
         canvas {
-            border: 4px solid #fff;
+            border: 2px solid #fff;
+            max-width: 100%;
+            max-height: 60vh; /* Sisakan ruang bawah untuk tombol HP */
             box-shadow: 0px 0px 30px rgba(0,0,0,0.8);
             background: linear-gradient(to bottom, #4A90E2, #87CEEB);
         }
-        .ui-container {
-            margin-top: 10px;
-            text-align: center;
+        /* Kontrol Khusus HP Android */
+        .mobile-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 800px;
+            margin-top: 15px;
+            padding: 10px;
+        }
+        .d-pad {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            width: 65px;
+            height: 65px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+        }
+        .btn:active {
+            background-color: rgba(255, 255, 255, 0.6);
+            transform: scale(0.9);
+        }
+        .btn-jump {
+            background-color: rgba(255, 0, 0, 0.3);
+            border-color: #FF0000;
+            width: 75px;
+            height: 75px;
         }
     </style>
 </head>
 <body>
 
     <canvas id="gameCanvas" width="800" height="500"></canvas>
-    <div class="ui-container">
-        <p><strong>KONTROL:</strong> [A / Panah Kiri] Jalan Kiri | [D / Panah Kanan] Jalan Kanan | [W / Spasi] Lompat</p>
+    
+    <!-- Tombol Kontrol Layar Sentuh untuk HP Android -->
+    <div class="mobile-controls">
+        <div class="d-pad">
+            <div class="btn" id="btnLeft">◀️</div>
+            <div class="btn" id="btnRight">▶️</div>
+        </div>
+        <div class="btn btn-jump" id="btnJump">🚀</div>
     </div>
 
 <script>
@@ -42,7 +85,7 @@
 
     // --- GAME CONFIG ---
     const FPS = 60;
-    const WORLD_WIDTH = 3000; // Dunianya dibuat panjang banget ke kanan!
+    const WORLD_WIDTH = 3000; 
     const FLOOR_Y = 420;
     
     let score = 0;
@@ -51,61 +94,46 @@
     let win = false;
     let keys = {};
     let gameTime = 0;
-
-    // Kamera yang mengikuti Player
     let camera = { x: 0 };
 
     // --- 🐾 OBJECT: SUPER SEGAWON ---
     const segawon = {
         x: 100, y: 300, width: 50, height: 40,
         speed: 6, velY: 0, gravity: 0.6, jumpPower: -14,
-        isJumping: false, facing: 'right', frame: 0,
+        isJumping: false, facing: 'right',
         
         draw() {
             ctx.save();
-            // Geser gambar sesuai posisi kamera
             ctx.translate(this.x - camera.x, this.y);
             
-            // Flip jika menghadap ke kiri
             if (this.facing === 'left') {
                 ctx.scale(-1, 1);
                 ctx.translate(-this.width, 0);
             }
 
-            // [Pixel Art Tubuh Anjing Cokelat]
+            // Tubuh Cokelat
             ctx.fillStyle = "#8B4513"; 
-            ctx.fillRect(5, 10, 40, 25); // Badan
-            ctx.fillRect(30, 0, 15, 15); // Kepala
+            ctx.fillRect(5, 10, 40, 25); 
+            ctx.fillRect(30, 0, 15, 15); 
             
-            // Telinga
-            ctx.fillStyle = "#5C2E0B";
-            ctx.fillRect(28, -2, 6, 8);
-            
-            // Mata & Hidung
-            ctx.fillStyle = "#000";
-            ctx.fillRect(41, 3, 3, 3); 
-            ctx.fillRect(44, 7, 2, 2);
+            // Telinga, Mata, Hidung
+            ctx.fillStyle = "#5C2E0B"; ctx.fillRect(28, -2, 6, 8);
+            ctx.fillStyle = "#000"; ctx.fillRect(41, 3, 3, 3); ctx.fillRect(44, 7, 2, 2);
 
-            // Kaki (Animasi lari sederhana berdasarkan waktu)
+            // Kaki Animasi
             ctx.fillStyle = "#5C2E0B";
             let legOffset = Math.sin(gameTime * 0.2) * 5;
-            if (!this.isJumping && (keys['d'] || keys['ArrowRight'] || keys['a'] || keys['ArrowLeft'])) {
+            if (!this.isJumping && (keys['ArrowRight'] || keys['ArrowLeft'])) {
                 ctx.fillRect(10, 35, 6, 8 + legOffset);
                 ctx.fillRect(32, 35, 6, 8 - legOffset);
             } else {
-                ctx.fillRect(10, 35, 6, 8);
-                ctx.fillRect(32, 35, 6, 8);
+                ctx.fillRect(10, 35, 6, 8); ctx.fillRect(32, 35, 6, 8);
             }
 
-            // Ekor bergerak-gerak
+            // Ekor & Syal Merah
             let tailWag = Math.sin(gameTime * 0.3) * 3;
-            ctx.fillStyle = "#8B4513";
-            ctx.fillRect(-2, 12 + tailWag, 8, 6);
-
-            // 🎗️ Syal Merah Legendaris Super Segawon
-            ctx.fillStyle = "#FF0000";
-            ctx.fillRect(26, 12, 10, 8); // Kerah syal
-            ctx.fillRect(20, 18 + (tailWag * 0.5), 12, 5); // Ujung syal melambai
+            ctx.fillStyle = "#8B4513"; ctx.fillRect(-2, 12 + tailWag, 8, 6);
+            ctx.fillStyle = "#FF0000"; ctx.fillRect(26, 12, 10, 8); ctx.fillRect(20, 18 + (tailWag * 0.5), 12, 5);
 
             ctx.restore();
         },
@@ -114,30 +142,25 @@
             this.velY += this.gravity;
             this.y += this.velY;
 
-            // Tabrakan dengan lantai dasar
             if (this.y + this.height >= FLOOR_Y) {
                 this.y = FLOOR_Y - this.height;
                 this.velY = 0;
                 this.isJumping = false;
             }
 
-            // Input Gerak
-            if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+            // Input deteksi
+            if (keys['ArrowLeft']) {
                 this.x -= this.speed;
                 this.facing = 'left';
             }
-            if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+            if (keys['ArrowRight']) {
                 this.x += this.speed;
                 this.facing = 'right';
             }
 
-            // Batasan Dunia Game
             if (this.x < 0) this.x = 0;
-            if (this.x > WORLD_WIDTH - this.width) {
-                win = true; // Sampai di ujung peta = MENANG!
-            }
+            if (this.x > WORLD_WIDTH - this.width) win = true;
 
-            // Kamera mengikuti player secara halus
             camera.x = this.x - canvas.width / 3;
             if (camera.x < 0) camera.x = 0;
             if (camera.x > WORLD_WIDTH - canvas.width) camera.x = WORLD_WIDTH - canvas.width;
@@ -151,28 +174,21 @@
         }
     };
 
-    // --- 📦 OBJEK LINGKUNGAN DAN RINTANGAN (PLATFORM) ---
+    // --- 📦 PLATFORM ---
     const platforms = [
-        { x: 300, y: 320, w: 120, h: 20 },
-        { x: 550, y: 240, w: 100, h: 20 },
-        { x: 800, y: 320, w: 150, h: 20 },
-        { x: 1200, y: 250, w: 200, h: 20 },
-        { x: 1600, y: 320, w: 100, h: 20 },
-        { x: 2000, y: 220, w: 150, h: 20 },
+        { x: 300, y: 320, w: 120, h: 20 }, { x: 550, y: 240, w: 100, h: 20 },
+        { x: 800, y: 320, w: 150, h: 20 }, { x: 1200, y: 250, w: 200, h: 20 },
+        { x: 1600, y: 320, w: 100, h: 20 }, { x: 2000, y: 220, w: 150, h: 20 },
         { x: 2400, y: 300, w: 250, h: 20 }
     ];
 
-    // --- 🦴 ITEM: TULANG EMAS ---
+    // --- 🦴 TULANG ---
     let bones = [];
     for(let i = 0; i < 25; i++) {
-        bones.push({
-            x: 250 + (i * 110) + Math.random() * 30,
-            y: Math.random() * 150 + 200,
-            w: 24, h: 14, collected: false
-        });
+        bones.push({ x: 250 + (i * 110) + Math.random() * 30, y: Math.random() * 150 + 200, w: 24, h: 14, collected: false });
     }
 
-    // --- 🐱 ENEMIES: KUCING OREN ---
+    // --- 🐱 KUCING OREN ---
     let cats = [
         { x: 450, y: FLOOR_Y - 30, w: 35, h: 30, speed: 2, minX: 350, maxX: 600 },
         { x: 950, y: FLOOR_Y - 30, w: 35, h: 30, speed: -2, minX: 800, maxX: 1100 },
@@ -180,28 +196,46 @@
         { x: 2100, y: FLOOR_Y - 30, w: 35, h: 30, speed: -2.5, minX: 1950, maxX: 2250 }
     ];
 
-    // --- ⌨️ EVENT LISTENERS CONTROLLER ---
+    // --- 📱 MOBILES TOUCH CONTROLS LOGIC ---
+    const bLeft = document.getElementById('btnLeft');
+    const bRight = document.getElementById('btnRight');
+    const bJump = document.getElementById('btnJump');
+
+    // Sentuh Kiri
+    bLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowLeft'] = true; });
+    bLeft.addEventListener('touchend', () => keys['ArrowLeft'] = false);
+    // Sentuh Kanan
+    bRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowRight'] = true; });
+    bRight.addEventListener('touchend', () => keys['ArrowRight'] = false);
+    // Sentuh Lompat / Reset saat mati
+    bJump.addEventListener('touchstart', (e) => { 
+        e.preventDefault(); 
+        if (gameOver || win) location.reload();
+        else segawon.jump(); 
+    });
+
+    // --- ⌨️ LAPTOP KEYBOARD CONTROLS ---
     window.addEventListener('keydown', e => {
-        keys[e.key] = true;
-        if (['Space', 'ArrowUp', 'w', 'W', ' '].includes(e.key)) segawon.jump();
+        if (e.key === 'ArrowLeft' || e.key === 'a') keys['ArrowLeft'] = true;
+        if (e.key === 'ArrowRight' || e.key === 'd') keys['ArrowRight'] = true;
+        if (['Space', 'ArrowUp', 'w', ' '].includes(e.key)) segawon.jump();
         if (gameOver || win) { if(e.key === 'r' || e.key === 'R') location.reload(); }
     });
-    window.addEventListener('keyup', e => keys[e.key] = false);
+    window.addEventListener('keyup', e => {
+        if (e.key === 'ArrowLeft' || e.key === 'a') keys['ArrowLeft'] = false;
+        if (e.key === 'ArrowRight' || e.key === 'd') keys['ArrowRight'] = false;
+    });
 
-    // --- 💥 COLLISION BOX FUNCTION ---
     function isColliding(r1, r2) {
-        return r1.x < r2.x + r2.w && r1.x + r1.width > r2.x &&
-               r1.y < r2.y + r2.h && r1.y + r1.height > r2.y;
+        return r1.x < r2.x + r2.w && r1.x + r1.width > r2.x && r1.y < r2.y + r2.h && r1.y + r1.height > r2.y;
     }
 
     // --- 🔄 ENGINE LOOP ---
     function update() {
         if (gameOver || win) return;
-
         gameTime++;
         segawon.update();
 
-        // 1. Update & Cek Platform Tabrakan Fizik
         platforms.forEach(plat => {
             if (segawon.x + segawon.width > plat.x && segawon.x < plat.x + plat.w) {
                 if (segawon.velY > 0 && segawon.y + segawon.height - segawon.velY <= plat.y) {
@@ -214,25 +248,15 @@
             }
         });
 
-        // 2. Cek Ambil Tulang
         bones.forEach(b => {
-            if (!b.collected && isColliding(segawon, b)) {
-                b.collected = true;
-                score += 10;
-            }
+            if (!b.collected && isColliding(segawon, b)) { b.collected = true; score += 10; }
         });
 
-        // 3. Update Kucing & Cek Senggolan (Damage)
         cats.forEach(cat => {
             cat.x += cat.speed;
-            if (cat.x < cat.minX || cat.x > cat.maxX) cat.speed *= -1; // Balik arah
-
+            if (cat.x < cat.minX || cat.x > cat.maxX) cat.speed *= -1;
             if (isColliding(segawon, cat)) {
-                lives--;
-                // Terpental ke belakang kalau kena musuh
-                segawon.velY = -8;
-                segawon.x += (cat.speed > 0) ? 40 : -40;
-                
+                lives--; segawon.velY = -8; segawon.x += (cat.speed > 0) ? 40 : -40;
                 if (lives <= 0) gameOver = true;
             }
         });
@@ -241,106 +265,64 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 🌄 BACKGROUND PARALLAX EFFECTS (Bukit Jauh)
+        // Bukit Belakang
         ctx.fillStyle = "#5cb85c";
         for (let i = 0; i < 5; i++) {
-            ctx.beginPath();
-            ctx.arc((i * 400) - (camera.x * 0.3), 450, 250, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc((i * 400) - (camera.x * 0.3), 450, 250, 0, Math.PI * 2); ctx.fill();
         }
 
-        // 🧱 GAMBAR TANAH UTAMA (FLOOR)
-        ctx.fillStyle = "#2e7d32";
-        ctx.fillRect(0 - camera.x, FLOOR_Y, WORLD_WIDTH, canvas.height - FLOOR_Y);
-        // Garis batas rumput atas
-        ctx.fillStyle = "#4caf50";
-        ctx.fillRect(0 - camera.x, FLOOR_Y, WORLD_WIDTH, 8);
-
-        // 🪵 GAMBAR PLATFORM / KOTAK KAYU GANTUNG
+        // Tanah & Platform
+        ctx.fillStyle = "#2e7d32"; ctx.fillRect(0 - camera.x, FLOOR_Y, WORLD_WIDTH, canvas.height - FLOOR_Y);
+        ctx.fillStyle = "#4caf50"; ctx.fillRect(0 - camera.x, FLOOR_Y, WORLD_WIDTH, 8);
         platforms.forEach(plat => {
-            ctx.fillStyle = "#A0522D"; // Warna Kayu
-            ctx.fillRect(plat.x - camera.x, plat.y, plat.w, plat.h);
-            ctx.fillStyle = "#CD853F";
-            ctx.fillRect(plat.x - camera.x, plat.y, plat.w, 4); // Detail atas kayu
+            ctx.fillStyle = "#A0522D"; ctx.fillRect(plat.x - camera.x, plat.y, plat.w, plat.h);
+            ctx.fillStyle = "#CD853F"; ctx.fillRect(plat.x - camera.x, plat.y, plat.w, 4);
         });
 
-        // 🦴 GAMBAR ITEM TULANG (Bentuk Tulang Pixel Sederhana)
+        // Gambar Tulang
         bones.forEach(b => {
             if (!b.collected) {
-                ctx.fillStyle = "#FFFFF0"; // Ivory White
-                ctx.fillRect(b.x - camera.x + 4, b.y + 4, 16, 6); // Batang tengah
-                ctx.fillRect(b.x - camera.x, b.y, 6, 6);         // Bulatan tulang samping
-                ctx.fillRect(b.x - camera.x, b.y + 8, 6, 6);
-                ctx.fillRect(b.x - camera.x + 18, b.y, 6, 6);
-                ctx.fillRect(b.x - camera.x + 18, b.y + 8, 6, 6);
+                ctx.fillStyle = "#FFFFF0"; ctx.fillRect(b.x - camera.x + 4, b.y + 4, 16, 6);
+                ctx.fillRect(b.x - camera.x, b.y, 6, 6); ctx.fillRect(b.x - camera.x, b.y + 8, 6, 6);
+                ctx.fillRect(b.x - camera.x + 18, b.y, 6, 6); ctx.fillRect(b.x - camera.x + 18, b.y + 8, 6, 6);
             }
         });
 
-        // 🐱 GAMBAR MUSUH KUCING OREN
+        // Gambar Kucing
         cats.forEach(cat => {
-            ctx.fillStyle = "#FF8C00"; // Dark Orange
-            ctx.fillRect(cat.x - camera.x, cat.y + 5, cat.w, cat.h - 5); // Badan
-            ctx.fillRect(cat.x - camera.x + (cat.speed > 0 ? 20 : 0), cat.y, 15, 15); // Kepala
-            // Telinga kucing
-            ctx.fillStyle = "#D2691E";
-            ctx.fillRect(cat.x - camera.x + (cat.speed > 0 ? 22 : 2), cat.y - 4, 4, 4);
+            ctx.fillStyle = "#FF8C00"; ctx.fillRect(cat.x - camera.x, cat.y + 5, cat.w, cat.h - 5);
+            ctx.fillRect(cat.x - camera.x + (cat.speed > 0 ? 20 : 0), cat.y, 15, 15);
+            ctx.fillStyle = "#D2691E"; ctx.fillRect(cat.x - camera.x + (cat.speed > 0 ? 22 : 2), cat.y - 4, 4, 4);
             ctx.fillRect(cat.x - camera.x + (cat.speed > 0 ? 30 : 10), cat.y - 4, 4, 4);
         });
 
-        // 🏁 TIANG FINISH (Tanda Akhir Petualangan di Ujung Kanan)
-        ctx.fillStyle = "#FFD700";
-        ctx.fillRect(WORLD_WIDTH - 150 - camera.x, FLOOR_Y - 150, 10, 150); // Tiang
-        ctx.fillStyle = "#FF0000";
-        ctx.fillRect(WORLD_WIDTH - 140 - camera.x, FLOOR_Y - 150, 60, 40); // Bendera Merah
+        // Tiang Finish
+        ctx.fillStyle = "#FFD700"; ctx.fillRect(WORLD_WIDTH - 150 - camera.x, FLOOR_Y - 150, 10, 150);
+        ctx.fillStyle = "#FF0000"; ctx.fillRect(WORLD_WIDTH - 140 - camera.x, FLOOR_Y - 150, 60, 40);
 
-        // --- 📊 HUD UI (SKOR & DARAH) ---
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "bold 20px 'Courier New'";
+        // UI Info
+        ctx.fillStyle = "#FFFFFF"; ctx.font = "bold 20px 'Courier New'";
         ctx.fillText("SCORE: " + score, 20, 40);
-        
-        // Menggambar Nyawa Berbentuk Teks Hati ❤️
-        let hearts = "";
-        for(let i=0; i<lives; i++) hearts += "❤️";
+        let hearts = ""; for(let i=0; i<lives; i++) hearts += "❤️";
         ctx.fillText("LIVES: " + hearts, 20, 70);
+        ctx.fillText("PROGRESS: " + Math.round((segawon.x / WORLD_WIDTH) * 100) + "%", 600, 40);
 
-        // Jarak Petualangan
-        let progress = Math.round((segawon.x / WORLD_WIDTH) * 100);
-        ctx.fillText("PROGRESS: " + progress + "%", 620, 40);
-
-        // --- 💀 SCREEN KONDISI MENANG / KALAH ---
+        // Layar Kalah / Menang
         if (gameOver) {
-            ctx.fillStyle = "rgba(0,0,0,0.75)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#FF0000";
-            ctx.font = "bold 40px Arial";
-            ctx.fillText("GAME OVER", 290, 240);
-            ctx.fillStyle = "#FFF";
-            ctx.font = "20px Arial";
-            ctx.fillText("Tekan 'R' untuk mengulang petualangan", 220, 290);
+            ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#FF0000"; ctx.font = "bold 35px Arial"; ctx.fillText("GAME OVER", 300, 220);
+            ctx.fillStyle = "#FFF"; ctx.font = "18px Arial"; ctx.fillText("Sentuh Tombol ROCKET untuk Mengulang", 240, 270);
         }
-
         if (win) {
-            ctx.fillStyle = "rgba(0,0,0,0.75)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#FFD700";
-            ctx.font = "bold 40px Arial";
-            ctx.fillText("SUPER SEGAWON MENANG!", 150, 240);
-            ctx.fillStyle = "#FFF";
-            ctx.font = "20px Arial";
-            ctx.fillText("Tulang Emas Berhasil Diselamatkan! Tekan 'R' untuk main lagi.", 100, 290);
+            ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#FFD700"; ctx.font = "bold 35px Arial"; ctx.fillText("KAMU MENANG! 🐾", 260, 220);
+            ctx.fillStyle = "#FFF"; ctx.font = "18px Arial"; ctx.fillText("Tulang Emas Selamat! Sentuh ROCKET untuk main lagi", 200, 270);
         }
 
-        // Gambar Karakter Utama paling depan
         segawon.draw();
     }
 
-    // Siklus Loop Game Bekerja
-    function game() {
-        update();
-        draw();
-        setTimeout(game, 1000 / FPS);
-    }
-
+    function game() { update(); draw(); setTimeout(game, 1000 / FPS); }
     game();
 </script>
 
