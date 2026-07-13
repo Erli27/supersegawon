@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Segawon: Petualangan Mencari Tulang</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            flex-direction: column;
+        }
+        canvas {
+            border: 4px solid #fff;
+            box-shadow: 0px 0px 20px rgba(0,0,0,0.7);
+            background-color: #87CEEB; /* Langit Biru */
+        }
+        .instruksi {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Super Segawon 🐾</h1>
+    <!-- Tempat Game Digambar -->
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div class="instruksi">
+        <p><strong>Kontrol:</strong> Panah Kiri/A = Kiri | Panah Kanan/D = Kanan | Spasi/Panah Atas/W = Lompat</p>
+    </div>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // ⏱️ GAME ENGINE VARIABLES
+    const FPS = 60;
+    let score = 0;
+    let keys = {};
+
+    // 🐾 OBJEK SUPER SEGAWON (PLAYER)
+    const segawon = {
+        x: 100,
+        y: 450,
+        width: 50,
+        height: 40,
+        color: "#8B4513", // Cokelat Anjing
+        speed: 6,
+        velY: 0,
+        gravity: 0.8,
+        jumpPower: -15,
+        isJumping: false,
+        
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            
+            // Tambahan Syal Merah Khas Super Segawon
+            ctx.fillStyle = "#FF0000";
+            ctx.fillRect(this.x, this.y + 15, 15, 8);
+        },
+        
+        update() {
+            // Gravitasi
+            this.velY += this.gravity;
+            this.y += this.velY;
+
+            // Batasan Tanah
+            if (this.y + this.height >= 500) {
+                this.y = 500 - this.height;
+                this.velY = 0;
+                this.isJumping = false;
+            }
+
+            // Gerakan Input
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+                this.x -= this.speed;
+            }
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+                this.x += this.speed;
+            }
+
+            // Batasan Layar Kiri/Kanan
+            if (this.x < 0) this.x = 0;
+            if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+        },
+
+        jump() {
+            if (!this.isJumping) {
+                this.velY = this.jumpPower;
+                this.isJumping = true;
+            }
+        }
+    };
+
+    // 🦴 OBJEK KOIN TULANG
+    const boneCoin = {
+        x: 0,
+        y: 0,
+        width: 20,
+        height: 20,
+        color: "#FFD700", // Kuning Emas
+        
+        randomize() {
+            this.x = Math.random() * (canvas.width - 100) + 50;
+            this.y = Math.random() * (200) + 250; // Muncul di area udara/atas tanah
+        },
+
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    };
+
+    // Acak posisi koin pertama kali
+    boneCoin.randomize();
+
+    // ⌨️ DETEKSI TOMBOL KEYBOARD
+    window.addEventListener('keydown', function(e) {
+        keys[e.key] = true;
+        if (['Space', 'ArrowUp', 'w', 'W', ' '].includes(e.key)) {
+            segawon.jump();
+        }
+    });
+
+    window.addEventListener('keyup', function(e) {
+        keys[e.key] = false;
+    });
+
+    // 💥 DETEKSI TABRAKAN (COLLISION EATING TULANG)
+    function checkCollision(rect1, rect2) {
+        return rect1.x < rect2.x + rect2.width &&
+               rect1.x + rect1.width > rect2.x &&
+               rect1.y < rect2.y + rect2.height &&
+               rect1.y + rect1.height > rect2.y;
+    }
+
+    // 🔄 LOOP UTAMA GAME
+    function gameLoop() {
+        // 1. Logika Update
+        segawon.update();
+
+        // Cek jika Segawon berhasil memakan tulang
+        if (checkCollision(segawon, boneCoin)) {
+            score += 1;
+            boneCoin.randomize(); // Pindahkan tulang ke tempat baru
+        }
+
+        // 2. Logika Menggambar (Rendering)
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Bersihkan layar lama
+
+        // Gambar Tanah Hijau
+        ctx.fillStyle = "#228B22";
+        ctx.fillRect(0, 500, canvas.width, 100);
+
+        // Gambar Karakter & Item
+        segawon.draw();
+        boneCoin.draw();
+
+        // Gambar UI Skor Tulang
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "24px Arial";
+        ctx.fillText("Skor Tulang: " + score, 20, 40);
+
+        // Panggil fungsi ini terus menerus (60 FPS)
+        setTimeout(gameLoop, 1000 / FPS);
+    }
+
+    // Jalankan Game!
+    gameLoop();
+</script>
+
+</body>
+</html>
