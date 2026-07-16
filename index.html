@@ -81,7 +81,7 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // --- 🖼️ DEKLARASI 3 LOGO LENGKAP ---
+    // --- 🖼️ DEKLARASI FILTER & STATUS UTAMA 3 LOGO ---
     let smkLoaded = false;
     let grupLoaded = false;
     let mokoLoaded = false;
@@ -91,7 +91,7 @@
     logoSmk.src = "logo smk.jpg"; 
     logoSmk.onload = () => { smkLoaded = true; };
 
-    // 2. Logo Grup (SUDAH DITAMBAHKAN)
+    // 2. Logo Grup
     const logoGrup = new Image();
     logoGrup.src = "logo_grup.jpeg"; 
     logoGrup.onload = () => { grupLoaded = true; };
@@ -339,29 +339,29 @@
         ctx.fillText("LEVEL: " + currentLevel, 600, 40);
         ctx.fillText("PROGRESS: " + Math.round((segawon.x / currentWorldWidth) * 100) + "%", 570, 70);
 
-        // --- 👑 WATERMARK DRAW AREA (3 LOGO JEJER) ---
+        // --- 👑 FIXED WATERMARK DRAW LOGIC (3 KOTAK BERJAJAR BERGANTIAN) ---
         // 1. Gambar Logo SMK (Posisi X: 20)
         if (smkLoaded) {
-            ctx.drawImage(logoSmk, 20, 85, 45, 45);
+            ctx.drawImage(logoSmk, 20, 95, 40, 40);
         } else {
-            ctx.fillStyle = "rgba(0, 0, 255, 0.6)"; ctx.fillRect(20, 85, 45, 25);
-            ctx.fillStyle = "#FFF"; ctx.font = "bold 9px Arial"; ctx.fillText("SMK..", 25, 102);
+            ctx.fillStyle = "rgba(0, 0, 255, 0.7)"; ctx.fillRect(20, 95, 40, 40);
+            ctx.fillStyle = "#FFF"; ctx.font = "bold 10px Arial"; ctx.fillText("SMK", 28, 118);
         }
         
-        // 2. Gambar Logo Grup (Posisi X: 75)
+        // 2. Gambar Logo Grup (Posisi X: 70)
         if (grupLoaded) {
-            ctx.drawImage(logoGrup, 75, 85, 45, 45);
+            ctx.drawImage(logoGrup, 70, 95, 40, 40);
         } else {
-            ctx.fillStyle = "rgba(0, 255, 0, 0.6)"; ctx.fillRect(75, 85, 45, 25);
-            ctx.fillStyle = "#FFF"; ctx.font = "bold 9px Arial"; ctx.fillText("GRUP..", 80, 102);
+            ctx.fillStyle = "rgba(40, 167, 69, 0.7)"; ctx.fillRect(70, 95, 40, 40); // Warna Hijau
+            ctx.fillStyle = "#FFF"; ctx.font = "bold 10px Arial"; ctx.fillText("GRUP", 75, 118);
         }
 
-        // 3. Gambar Logo Moko (Posisi X: 130)
+        // 3. Gambar Logo Moko (Posisi X: 120)
         if (mokoLoaded) {
-            ctx.drawImage(logoMoko, 130, 85, 45, 45);
+            ctx.drawImage(logoMoko, 120, 95, 40, 40);
         } else {
-            ctx.fillStyle = "rgba(255, 0, 0, 0.6)"; ctx.fillRect(130, 85, 45, 25);
-            ctx.fillStyle = "#FFF"; ctx.font = "bold 9px Arial"; ctx.fillText("MOKO..", 133, 102);
+            ctx.fillStyle = "rgba(220, 53, 69, 0.7)"; ctx.fillRect(120, 95, 40, 40); // Warna Merah
+            ctx.fillStyle = "#FFF"; ctx.font = "bold 10px Arial"; ctx.fillText("MOKO", 123, 118);
         }
 
         if (gameOver) {
