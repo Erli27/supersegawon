@@ -83,12 +83,17 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // --- 🖼️ LOAD LOGO IMAGES ---
+    // --- 🖼️ LOAD LOGO IMAGES WITH STATUS DETECTOR ---
+    let mokoLoaded = false;
+    let smkLoaded = false;
+
     const logoMoko = new Image();
-    logoMoko.src = "logo_moko.png"; // Ganti dengan nama file logo Moko kamu di GitHub
+    logoMoko.src = "logo smk.jpeg"; // Disesuaikan dengan file WhatsApp Image kamu
+    logoMoko.onload = () => { mokoLoaded = true; };
 
     const logoSmk = new Image();
-    logoSmk.src = "logo_smk.png"; // Ganti dengan nama file logo SMK kamu di GitHub
+    logoSmk.src = "logo smk.jpg"; // Diarahkan ke file logo smk.jpg di GitHub kamu
+    logoSmk.onload = () => { smkLoaded = true; };
 
     // --- GAME CONFIG ---
     const FPS = 60;
@@ -182,7 +187,7 @@
             }
 
             camera.x = this.x - canvas.width / 3;
-            if (camera.x < 0) camera.x = 0;
+            if (camera.x < 0) pandemics = 0;
             if (camera.x > currentWorldWidth - canvas.width) camera.x = currentWorldWidth - canvas.width;
         },
 
@@ -207,7 +212,7 @@
         win = false;
 
         if (level === 1) {
-            currentWorldWidth = 3000; // Panjang standar
+            currentWorldWidth = 3000;
             platforms = [
                 { x: 300, y: 320, w: 120, h: 20 }, { x: 550, y: 240, w: 100, h: 20 },
                 { x: 800, y: 320, w: 150, h: 20 }, { x: 1200, y: 250, w: 200, h: 20 },
@@ -221,7 +226,7 @@
                 { x: 2100, y: FLOOR_Y - 30, w: 35, h: 30, speed: -2.5, minX: 1950, maxX: 2250 }
             ];
         } else if (level === 2) {
-            currentWorldWidth = 4500; // Map diperpanjang ke 4500!
+            currentWorldWidth = 4500;
             platforms = [
                 { x: 300, y: 280, w: 100, h: 20 }, { x: 600, y: 340, w: 150, h: 20 },
                 { x: 900, y: 220, w: 100, h: 20 }, { x: 1300, y: 300, w: 120, h: 20 },
@@ -238,7 +243,7 @@
                 { x: 3850, y: FLOOR_Y - 30, w: 35, h: 30, speed: -4.5, minX: 3650, maxX: 4100 }
             ];
         } else if (level === 3) {
-            currentWorldWidth = 6000; // Map super panjang ke 6000!
+            currentWorldWidth = 6000;
             platforms = [
                 { x: 300, y: 250, w: 80, h: 20 }, { x: 650, y: 220, w: 80, h: 20 },
                 { x: 1000, y: 300, w: 100, h: 20 }, { x: 1400, y: 240, w: 80, h: 20 },
@@ -260,7 +265,6 @@
             ];
         }
 
-        // Jumlah tulang otomatis beradaptasi dengan panjang peta agar melimpah
         bones = [];
         let totalBones = level === 1 ? 25 : level === 2 ? 40 : 55;
         for(let i = 0; i < totalBones; i++) {
@@ -351,14 +355,14 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Bukit Belakang (Berulang mengikuti panjang peta)
+        // Bukit Belakang
         ctx.fillStyle = "#5cb85c";
         let totalHills = Math.ceil(currentWorldWidth / 400) + 1;
         for (let i = 0; i < totalHills; i++) {
             ctx.beginPath(); ctx.arc((i * 400) - (camera.x * 0.3), 450, 250, 0, Math.PI * 2); ctx.fill();
         }
 
-        // Tanah & Platform dinamis mengikuti currentWorldWidth
+        // Tanah & Platform
         ctx.fillStyle = "#2e7d32"; ctx.fillRect(0 - camera.x, FLOOR_Y, currentWorldWidth, canvas.height - FLOOR_Y);
         ctx.fillStyle = "#4caf50"; ctx.fillRect(0 - camera.x, FLOOR_Y, currentWorldWidth, 8);
         platforms.forEach(plat => {
@@ -383,7 +387,7 @@
             ctx.fillRect(cat.x - camera.x + (cat.speed > 0 ? 30 : 10), cat.y - 4, 4, 4);
         });
 
-        // Tiang Finish otomatis berpindah ke ujung paling kanan peta level aktif
+        // Tiang Finish
         ctx.fillStyle = "#FFD700"; ctx.fillRect(currentWorldWidth - 150 - camera.x, FLOOR_Y - 150, 10, 150);
         ctx.fillStyle = "#FF0000"; ctx.fillRect(currentWorldWidth - 140 - camera.x, FLOOR_Y - 150, 60, 40);
 
@@ -396,16 +400,24 @@
         ctx.fillText("LEVEL: " + currentLevel, 600, 40);
         ctx.fillText("PROGRESS: " + Math.round((segawon.x / currentWorldWidth) * 100) + "%", 570, 70);
 
-        // --- 👑 WATERMARK LOGO DI LAYAR GAME ---
-        // Menggambar Logo SMK (Ukuran 45x45 px)
-        try {
+        // --- 👑 FIXED WATERMARK LOGO DI LAYAR GAME (POJOK KIRI BAWAH INFO) ---
+        // 1. Gambar Logo SMK
+        if (smkLoaded) {
             ctx.drawImage(logoSmk, 20, 85, 45, 45);
-        } catch(e) {}
+        } else {
+            // Backup Teks Kotak jika gambar SMK gagal load
+            ctx.fillStyle = "#0000FF"; ctx.fillRect(20, 85, 45, 45);
+            ctx.fillStyle = "#FFF"; ctx.font = "bold 10px Arial"; ctx.fillText("SMK", 30, 110);
+        }
         
-        // Menggambar Logo Moko Developer (Ukuran 45x45 px)
-        try {
+        // 2. Gambar Logo Moko
+        if (mokoLoaded) {
             ctx.drawImage(logoMoko, 75, 85, 45, 45);
-        } catch(e) {}
+        } else {
+            // Backup Teks Kotak jika gambar Moko gagal load
+            ctx.fillStyle = "#333333"; ctx.fillRect(75, 85, 45, 45);
+            ctx.fillStyle = "#FFF"; ctx.font = "bold 10px Arial"; ctx.fillText("MOKO", 82, 110);
+        }
 
         // Layar Kalah
         if (gameOver) {
