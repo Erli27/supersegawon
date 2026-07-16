@@ -85,14 +85,14 @@
 
     // --- GAME CONFIG ---
     const FPS = 60;
-    const WORLD_WIDTH = 3000; 
     const FLOOR_Y = 420;
     
+    let currentWorldWidth = 3000; // Panjang peta dinamis per level
     let score = 0;
     let lives = 3;
     let gameOver = false;
     let win = false;
-    let totalWin = false; // Status jika semua level tamat
+    let totalWin = false; 
     let keys = {};
     let gameTime = 0;
     let camera = { x: 0 };
@@ -165,18 +165,18 @@
 
             if (this.x < 0) this.x = 0;
             
-            // Deteksi menyentuh garis finish (ujung kanan peta)
-            if (this.x > WORLD_WIDTH - this.width) {
+            // Deteksi menyentuh garis finish dinamis sesuai ukuran map level tersebut
+            if (this.x > currentWorldWidth - this.width) {
                 if (currentLevel < maxLevels) {
-                    win = true; // Menang level saat ini
+                    win = true; 
                 } else {
-                    totalWin = true; // Tamat semua level
+                    totalWin = true; 
                 }
             }
 
             camera.x = this.x - canvas.width / 3;
             if (camera.x < 0) camera.x = 0;
-            if (camera.x > WORLD_WIDTH - canvas.width) camera.x = WORLD_WIDTH - canvas.width;
+            if (camera.x > currentWorldWidth - canvas.width) camera.x = currentWorldWidth - canvas.width;
         },
 
         jump() {
@@ -192,15 +192,15 @@
     let bones = [];
     let cats = [];
 
-    // --- 🛠️ FUNGSI UNTUK GENERATE RINTANGAN PER LEVEL ---
+    // --- 🛠️ FUNGSI UNTUK GENERATE RINTANGAN & PANJANG MAP PER LEVEL ---
     function loadLevel(level) {
         segawon.x = 100;
         segawon.y = 300;
         segawon.velY = 0;
         win = false;
 
-        // Desain Platform Dinamis berdasarkan level
         if (level === 1) {
+            currentWorldWidth = 3000; // Panjang standar
             platforms = [
                 { x: 300, y: 320, w: 120, h: 20 }, { x: 550, y: 240, w: 100, h: 20 },
                 { x: 800, y: 320, w: 150, h: 20 }, { x: 1200, y: 250, w: 200, h: 20 },
@@ -214,43 +214,53 @@
                 { x: 2100, y: FLOOR_Y - 30, w: 35, h: 30, speed: -2.5, minX: 1950, maxX: 2250 }
             ];
         } else if (level === 2) {
-            // Level 2: Platform lebih acak & Kucing lebih cepat (+1 kecepatan dasar)
+            currentWorldWidth = 4500; // Map diperpanjang ke 4500!
             platforms = [
-                { x: 250, y: 280, w: 100, h: 20 }, { x: 500, y: 340, w: 150, h: 20 },
-                { x: 750, y: 220, w: 100, h: 20 }, { x: 1100, y: 300, w: 120, h: 20 },
-                { x: 1400, y: 200, w: 100, h: 20 }, { x: 1800, y: 280, w: 200, h: 20 },
-                { x: 2300, y: 240, w: 150, h: 20 }
+                { x: 300, y: 280, w: 100, h: 20 }, { x: 600, y: 340, w: 150, h: 20 },
+                { x: 900, y: 220, w: 100, h: 20 }, { x: 1300, y: 300, w: 120, h: 20 },
+                { x: 1700, y: 200, w: 100, h: 20 }, { x: 2100, y: 280, w: 200, h: 20 },
+                { x: 2600, y: 240, w: 150, h: 20 }, { x: 3100, y: 300, w: 120, h: 20 },
+                { x: 3600, y: 220, w: 140, h: 20 }, { x: 4000, y: 280, w: 180, h: 20 }
             ];
             cats = [
                 { x: 450, y: FLOOR_Y - 30, w: 35, h: 30, speed: 3.5, minX: 350, maxX: 650 },
-                { x: 950, y: FLOOR_Y - 30, w: 35, h: 30, speed: -3.5, minX: 800, maxX: 1150 },
-                { x: 1550, y: FLOOR_Y - 30, w: 35, h: 30, speed: 4, minX: 1300, maxX: 1700 },
-                { x: 2000, y: FLOOR_Y - 30, w: 35, h: 30, speed: -4, minX: 1850, maxX: 2200 }
+                { x: 1050, y: FLOOR_Y - 30, w: 35, h: 30, speed: -3.5, minX: 900, maxX: 1250 },
+                { x: 1850, y: FLOOR_Y - 30, w: 35, h: 30, speed: 4, minX: 1600, maxX: 2000 },
+                { x: 2350, y: FLOOR_Y - 30, w: 35, h: 30, speed: -4, minX: 2150, maxX: 2500 },
+                { x: 3350, y: FLOOR_Y - 30, w: 35, h: 30, speed: 4.5, minX: 3150, maxX: 3550 },
+                { x: 3850, y: FLOOR_Y - 30, w: 35, h: 30, speed: -4.5, minX: 3650, maxX: 4100 }
             ];
         } else if (level === 3) {
-            // Level 3: Lebih menantang, platform lebih sempit & kucing sangat cepat
+            currentWorldWidth = 6000; // Map super panjang ke 6000!
             platforms = [
-                { x: 300, y: 250, w: 80, h: 20 }, { x: 600, y: 220, w: 80, h: 20 },
-                { x: 900, y: 300, w: 100, h: 20 }, { x: 1300, y: 240, w: 80, h: 20 },
-                { x: 1700, y: 200, w: 80, h: 20 }, { x: 2100, y: 280, w: 120, h: 20 },
-                { x: 2500, y: 220, w: 100, h: 20 }
+                { x: 300, y: 250, w: 80, h: 20 }, { x: 650, y: 220, w: 80, h: 20 },
+                { x: 1000, y: 300, w: 100, h: 20 }, { x: 1400, y: 240, w: 80, h: 20 },
+                { x: 1800, y: 200, w: 80, h: 20 }, { x: 2200, y: 280, w: 120, h: 20 },
+                { x: 2700, y: 220, w: 100, h: 20 }, { x: 3200, y: 260, w: 90, h: 20 },
+                { x: 3700, y: 300, w: 80, h: 20 }, { x: 4200, y: 210, w: 100, h: 20 },
+                { x: 4700, y: 270, w: 90, h: 20 }, { x: 5200, y: 230, w: 120, h: 20 },
+                { x: 5500, y: 310, w: 100, h: 20 }
             ];
             cats = [
                 { x: 450, y: FLOOR_Y - 30, w: 35, h: 30, speed: 5, minX: 300, maxX: 700 },
-                { x: 1050, y: FLOOR_Y - 30, w: 35, h: 30, speed: -5, minX: 850, maxX: 1200 },
-                { x: 1500, y: FLOOR_Y - 30, w: 35, h: 30, speed: 5.5, minX: 1350, maxX: 1700 },
-                { x: 2200, y: FLOOR_Y - 30, w: 35, h: 30, speed: -6, minX: 1900, maxX: 2400 }
+                { x: 1150, y: FLOOR_Y - 30, w: 35, h: 30, speed: -5, minX: 950, maxX: 1300 },
+                { x: 1600, y: FLOOR_Y - 30, w: 35, h: 30, speed: 5.5, minX: 1450, maxX: 1750 },
+                { x: 2400, y: FLOOR_Y - 30, w: 35, h: 30, speed: -6, minX: 2200, maxX: 2600 },
+                { x: 3400, y: FLOOR_Y - 30, w: 35, h: 30, speed: 6, minX: 3200, maxX: 3600 },
+                { x: 4400, y: FLOOR_Y - 30, w: 35, h: 30, speed: -6.5, minX: 4200, maxX: 4650 },
+                { x: 4950, y: FLOOR_Y - 30, w: 35, h: 30, speed: 7, minX: 4750, maxX: 5100 },
+                { x: 5400, y: FLOOR_Y - 30, w: 35, h: 30, speed: -7.5, minX: 5250, maxX: 5600 }
             ];
         }
 
-        // Generate tulang baru untuk level tersebut
+        // Jumlah tulang otomatis beradaptasi dengan panjang peta agar melimpah
         bones = [];
-        for(let i = 0; i < 25; i++) {
-            bones.push({ x: 250 + (i * 110) + Math.random() * 30, y: Math.random() * 150 + 200, w: 24, h: 14, collected: false });
+        let totalBones = level === 1 ? 25 : level === 2 ? 40 : 55;
+        for(let i = 0; i < totalBones; i++) {
+            bones.push({ x: 250 + (i * 105) + Math.random() * 25, y: Math.random() * 150 + 200, w: 24, h: 14, collected: false });
         }
     }
 
-    // Load level 1 pertama kali game dibuka
     loadLevel(currentLevel);
 
     // --- 📱 MOBILES TOUCH CONTROLS LOGIC ---
@@ -267,9 +277,9 @@
     bJump.addEventListener('touchstart', (e) => { 
         e.preventDefault(); 
         if (gameOver || totalWin) {
-            location.reload(); // Mengulang dari awal jika kalah atau tamat total
+            location.reload(); 
         } else if (win) {
-            currentLevel++;   // Naik ke level berikutnya
+            currentLevel++;   
             loadLevel(currentLevel);
         } else {
             segawon.jump(); 
@@ -334,15 +344,16 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Bukit Belakang
+        // Bukit Belakang (Berulang mengikuti panjang peta)
         ctx.fillStyle = "#5cb85c";
-        for (let i = 0; i < 5; i++) {
+        let totalHills = Math.ceil(currentWorldWidth / 400) + 1;
+        for (let i = 0; i < totalHills; i++) {
             ctx.beginPath(); ctx.arc((i * 400) - (camera.x * 0.3), 450, 250, 0, Math.PI * 2); ctx.fill();
         }
 
-        // Tanah & Platform
-        ctx.fillStyle = "#2e7d32"; ctx.fillRect(0 - camera.x, FLOOR_Y, WORLD_WIDTH, canvas.height - FLOOR_Y);
-        ctx.fillStyle = "#4caf50"; ctx.fillRect(0 - camera.x, FLOOR_Y, WORLD_WIDTH, 8);
+        // Tanah & Platform dinamis mengikuti currentWorldWidth
+        ctx.fillStyle = "#2e7d32"; ctx.fillRect(0 - camera.x, FLOOR_Y, currentWorldWidth, canvas.height - FLOOR_Y);
+        ctx.fillStyle = "#4caf50"; ctx.fillRect(0 - camera.x, FLOOR_Y, currentWorldWidth, 8);
         platforms.forEach(plat => {
             ctx.fillStyle = "#A0522D"; ctx.fillRect(plat.x - camera.x, plat.y, plat.w, plat.h);
             ctx.fillStyle = "#CD853F"; ctx.fillRect(plat.x - camera.x, plat.y, plat.w, 4);
@@ -365,9 +376,9 @@
             ctx.fillRect(cat.x - camera.x + (cat.speed > 0 ? 30 : 10), cat.y - 4, 4, 4);
         });
 
-        // Tiang Finish
-        ctx.fillStyle = "#FFD700"; ctx.fillRect(WORLD_WIDTH - 150 - camera.x, FLOOR_Y - 150, 10, 150);
-        ctx.fillStyle = "#FF0000"; ctx.fillRect(WORLD_WIDTH - 140 - camera.x, FLOOR_Y - 150, 60, 40);
+        // Tiang Finish otomatis berpindah ke ujung paling kanan peta level aktif
+        ctx.fillStyle = "#FFD700"; ctx.fillRect(currentWorldWidth - 150 - camera.x, FLOOR_Y - 150, 10, 150);
+        ctx.fillStyle = "#FF0000"; ctx.fillRect(currentWorldWidth - 140 - camera.x, FLOOR_Y - 150, 60, 40);
 
         // UI Info
         ctx.fillStyle = "#FFFFFF"; ctx.font = "bold 20px 'Courier New'";
@@ -375,9 +386,8 @@
         let hearts = ""; for(let i=0; i<lives; i++) hearts += "❤️";
         ctx.fillText("LIVES: " + hearts, 20, 70);
         
-        // Menampilkan Info Level Aktif di Kanan Atas
         ctx.fillText("LEVEL: " + currentLevel, 600, 40);
-        ctx.fillText("PROGRESS: " + Math.round((segawon.x / WORLD_WIDTH) * 100) + "%", 570, 70);
+        ctx.fillText("PROGRESS: " + Math.round((segawon.x / currentWorldWidth) * 100) + "%", 570, 70);
 
         // Layar Kalah
         if (gameOver) {
@@ -386,14 +396,14 @@
             ctx.fillStyle = "#FFF"; ctx.font = "18px Arial"; ctx.fillText("Sentuh Tombol ROCKET / tekan 'R' untuk Mengulang", 200, 270);
         }
         
-        // Layar Menang Level (Transisi ke level berikutnya)
+        // Layar Menang Level 
         if (win && !totalWin) {
             ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "#FFD700"; ctx.font = "bold 35px Arial"; ctx.fillText(`LEVEL ${currentLevel} SELESAI! 🐾`, 240, 220);
             ctx.fillStyle = "#FFF"; ctx.font = "18px Arial"; ctx.fillText("Sentuh ROCKET / Tekan 'Spasi' untuk ke Level Berikutnya", 180, 270);
         }
 
-        // Layar Tamat Total (Menang Level Terakhir)
+        // Layar Tamat Total
         if (totalWin) {
             ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "#00FF00"; ctx.font = "bold 35px Arial"; ctx.fillText("SELAMAT! KAMU TAMAT! 👑🏆", 170, 220);
